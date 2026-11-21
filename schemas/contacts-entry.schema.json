@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArkNetz contacts entry (PROTOCOL.md §3.5)",
+  "type": "object",
+  "required": [
+    "address",
+    "publicKey"
+  ],
+  "properties": {
+    "address": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "publicKey": {
+      "type": "string"
+    },
+    "site": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "integer"
+    }
+  }
+}

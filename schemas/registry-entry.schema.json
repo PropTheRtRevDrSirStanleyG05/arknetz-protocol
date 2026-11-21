@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArkNetz registry entry (PROTOCOL.md §3.1)",
+  "type": "object",
+  "required": [
+    "domain",
+    "backend",
+    "shard",
+    "owner"
+  ],
+  "properties": {
+    "domain": {
+      "type": "string"
+    },
+    "backend": {
+      "type": "string"
+    },
+    "mirrors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "shard": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{1,2}$"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "integer"
+    },
+    "delegations": {
+      "type": "object"
+    }
+  }
+}

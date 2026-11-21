@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArkNetz protocol-root manifest",
+  "type": "object",
+  "required": [
+    "protocolVersion",
+    "defaultRootRepo",
+    "masterGithubUser",
+    "registryShards",
+    "contactsShards"
+  ],
+  "properties": {
+    "protocolVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "defaultRootRepo": {
+      "type": "string"
+    },
+    "masterGithubUser": {
+      "type": "string"
+    },
+    "registryShards": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contactsShards": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "directoryCategories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "feedShards": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mirrors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "zstdDictionary": {
+      "type": "object",
+      "required": [
+        "version",
+        "url",
+        "sha256"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer"
+        },
+        "url": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

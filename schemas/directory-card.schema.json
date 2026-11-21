@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArkNetz directory card (PROTOCOL.md §3.6)",
+  "type": "object",
+  "required": [
+    "domain"
+  ],
+  "properties": {
+    "domain": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "category": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "integer"
+    }
+  }
+}
