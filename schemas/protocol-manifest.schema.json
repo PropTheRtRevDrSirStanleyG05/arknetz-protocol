@@ -32,6 +32,12 @@
         "type": "string"
       }
     },
+    "pendingRepos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "directoryCategories": {
       "type": "array",
       "items": {

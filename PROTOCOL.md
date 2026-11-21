@@ -155,7 +155,7 @@ Rendered by the single shared block renderer.
 
 | Field | Type | Notes |
 |---|---|---|
-| `type` **(required)** | string | Whitelist: `hero, nav, h1, h2, h3, p, cols, cards, series-grid, img, video, audio, code, quote, link, docs-sidebar, gallery, app`. Unknown types render as a visible placeholder. |
+| `type` **(required)** | string | Whitelist: `hero, nav, h1, h2, h3, p, cols, cards, series-grid, img, video, audio, code, quote, link, docs-sidebar, gallery, app, list, table`. Unknown types render as a visible placeholder. |
 | `text` | string | Plain text; always kept in sync with `runs`. |
 | `runs` | InlineRun[] | Inline rich-text runs (bold/italic/underline/strike/code/links) on text blocks. |
 | `src` | string | Media hotlink — `https://archive.org/download/<item>/<file>` only. |
@@ -165,6 +165,10 @@ Rendered by the single shared block renderer.
 | `language` | string | Code block language. |
 | `items` | BlockNode[] | Children (cards, gallery, series-grid). |
 | `columns` | BlockNode[][] | Columns block. |
+| `listStyle` | `("ul"\|"ol")` | "list": bulleted or numbered. Absent = "ul". |
+| `listItems` | ListItem[] | "list": the items, nested via `ListItem.children` (a list is at least 2 levels deep). Items carry typed inline runs, never raw HTML. |
+| `rows` | TableCell[][] | "table": rows of cells; every row has the same length. Cells carry typed inline runs, never raw HTML. |
+| `headerRow` | boolean | "table": the first row renders as `<th scope="col">`. Absent = true. |
 | `appSrc` / `appSrcdoc` | string | `["app", …]` bundle URL or inline srcdoc. Compressed cap **~150 KB** (thread turn 21). Rendered only as a sandboxed iframe (§7). |
 | `visibleOn` | `("desktop"\|"tablet"\|"mobile")[]` | Per-block responsive visibility; absent = visible everywhere. |
 | `focalPoint` | `{x, y}` | Image focal point, 0–100 on each axis. |
@@ -451,6 +455,48 @@ Codeberg private repos, and Hugging Face ONLY for open-science/AI
 datasets and model weights. **Internet Archive and Wikimedia are
 EXCLUDED from ArkDrive** — uploading opaque encrypted personal blobs
 there violates their ToS.
+
+### 3.14 Collab state — `peers/<login>.json` on `collab/<domain-slug>`
+
+**PROPOSED (implemented 2026-11-21, mock-verified only).** Real-time
+multi-user collaboration for the editor. One session per site: a
+`collab/<domain-slug>` branch in the per-domain site repo, one state
+file per peer at `peers/<login>.json`, read/written through the GitHub
+Contents API with the acting user's OWN token (`public_repo` scope).
+Reads use `api.github.com`, never `raw.githubusercontent.com` (the raw
+CDN caches branch content). Each peer writes only its own file, so
+peers never contend for the same SHA. The branch never touches `main`
+or `site.json.zst` until someone Publishes.
+
+```json
+{
+  "v": 1, "session": "computers-edu", "login": "alice",
+  "colour": "#2563eb", "heartbeatAt": 1794787200000,
+  "cursor": { "blockId": "b2", "start": 4, "end": 4 },
+  "blocks": [ { "type": "h1", "text": "Hello", "id": "b1" } ],
+  "versions": { "b1": { "updatedAt": 1794787200000, "author": "alice" } },
+  "placement": { "b1": { "updatedAt": 1794787200000, "author": "alice", "blockId": "b1" } },
+  "deleted": {}
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `v` **(required)** | number | State-file version (1). Readers reject unknown versions loudly. |
+| `session` **(required)** | string | Domain slug; one session per site. |
+| `login` / `colour` | string | Peer identity and deterministic display colour. |
+| `heartbeatAt` **(required)** | number | Unix ms of the write. A peer gone >30 s drops from presence. |
+| `cursor` | object \| null | `{ blockId, start, end }` — live caret/selection. |
+| `blocks` **(required)** | BlockNode[] | The peer's full block list (snapshots, not an op log). |
+| `versions` **(required)** | object | blockId → `{ updatedAt, author }`. Per-block LWW on `(updatedAt, author)`. |
+| `placement` | object | blockId → placement key for deterministic ordering of concurrent inserts at the same index. |
+| `deleted` | object | blockId → `{ updatedAt, author }` tombstones. Absence from `blocks` alone is never a delete. |
+
+Honest limits (binding): poll-based, ~5 s latency, never sub-second;
+no character-level OT — same-block edits resolve whole-block, newer
+wins, loser recorded in a visible conflict note, never silently
+dropped; offline peers' blocks stay, marked stale. This is NOT Google
+Docs parity. Live GitHub round-trips have not run (mock-verified only).
 
 ## 4. Zstd dictionary versioning
 
@@ -927,3 +973,13 @@ Google Lighthouse. **UNVERIFIED:** the Lighthouse target and the
   `directoryCategories` in the protocol-root manifest (§3.6,
   §10.4), with `["tech", "cinema", "games"]` kept only as the
   fallback for manifests without the field.
+- **Collaboration (2026-11-21, §3.14):** real-time multi-user editing
+  via a `collab/<domain-slug>` branch in the site repo, one state
+  file per peer (`peers/<login>.json`), Contents API with the user's
+  own token (`public_repo`). Per-block LWW, conflict notes, 30 s
+  presence expiry, ~5 s poll latency, no character-level OT — NOT
+  Google Docs parity. Mock-verified only; no live round-trip has run.
+- **Tables and lists (2026-11-21, §3.2.1):** `list` and `table` are
+  first-class block types (`listStyle`/`listItems`, `rows`/`headerRow`),
+  with the in-editor rich-text toolbar for both. Typed inline runs
+  only — never raw HTML.
