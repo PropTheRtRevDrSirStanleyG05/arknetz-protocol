@@ -528,7 +528,7 @@ Docs parity. Live GitHub round-trips have not run (mock-verified only).
   fixed sentences and lost to v1 on held-out documents; it was
   discarded and the corpus rebuilt). The manifest announces v2:
   `zstdDictionary: { "version": 2, "url": "…/zstd-dictionary-v2.bin",
-  "sha256": "a178…" }`. New files are written with v2. Measured
+  "sha256": "a178…" }`. Measured
   (in-app engine, 100 sampled corpus files, 104,600 raw bytes):
   plain 48,227, v1 36,962, **v2 22,769** — v2 wins on all 100 files.
   Held-out documents (nothing in them appears in the corpus): novel
@@ -551,6 +551,28 @@ Docs parity. Live GitHub round-trips have not run (mock-verified only).
   silently, so the decoder checks the dictionary ID and a
   wrong/missing dictionary throws. Pre-dictionary plain frames still
   decompress.
+- **DEPRECATED 2026-11-21 (Stanley's decision — the dictionary is
+  dropped, new files are plain zstd).** The benchmark
+  (BENCHMARK-0.4.0.md) proved the v2 dictionary saves ZERO bytes on
+  every realistic payload tested (registry 0/100/1000/4096 entries,
+  50 KB site, demo site), and re-measurement during the drop
+  (2026-11-21, in-app engine) confirmed the advantage is negligible
+  at realistic scale: 1,000-entry registry (126,451 raw bytes)
+  plain 4,224 vs v2 3,970 — 254 bytes, 0.2% of raw; 92 KB site
+  plain 182 vs v2 141 — 41 bytes; and on a 100-entry registry v2 is
+  WORSE by 577 bytes (1,306 vs 729). The dictionary only ever won
+  on tiny documents (tens of bytes on ~150-byte frames) — never
+  enough to justify a 32 KB download plus decode complexity. So:
+  new files are written with **plain zstd, no dictionary** (frames
+  carry no dictionary ID); the `register.yml` workflow no longer
+  fetches any dictionary and uses bare `zstd -d` / `zstd`; the
+  manifest's `zstdDictionary` field is deprecated and ignored by
+  the client (it never fetched the dictionary at runtime — the
+  dictionaries were embedded in the client). The v1/v2 dictionary
+  `.bin` files stay published in the `arknetz-protocol` repo
+  (marked deprecated there, never deleted) and the decoder keeps
+  trying v2, then v1, then plain — every frame already published
+  still decodes. `dict-training/` is kept as the training record.
 
 ## 5. Registry and shard rules
 
